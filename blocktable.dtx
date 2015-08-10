@@ -1,0 +1,213 @@
+% \iffalse meta-comment
+%
+% Copyright (C) 2015 by Ruben Giannotti 
+% <ruben dot giannotti at gmx dot net>
+% -------------------------------------------------------
+% 
+% This work may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either
+% version 1.3c of this license or (at your option) any
+% later version. The latest version of this license is in
+%   http://www.latex-project.org/lppl.txt
+% and version 1.3 or later is part of all distributions
+% of LaTeX version 2005/12/01 or later.
+%
+% This work has the LPPL maintenance status `maintained'.
+% 
+% The Current Maintainer of this work is Ruben Giannotti.
+%
+% This work consists of the files
+%   blocktable.dtx 
+%   blocktable.ins
+% and the derived file blocktable.sty.
+%
+% \fi
+%
+% \iffalse
+%<*driver>
+\ProvidesFile{blocktable.dtx}
+%</driver>
+%<package>\NeedsTeXFormat{LaTeX2e}[2008/04/05]
+%<package>\ProvidesPackage{blocktable}
+%<*package>
+    [2015/08/08 v0.1 visibly chunked longtables (RG)]
+%</package>
+%
+%<*driver>
+\documentclass{ltxdoc}
+\usepackage{amssymb,parskip}
+\setlength\parindent{0pt}
+\newcommand\pkg{\textsf}
+\newcommand\url{\texttt}
+\newcommand\email{\texttt}
+\newcommand\important{$\blacktriangleright$\space Important note:\space}
+\EnableCrossrefs
+\CodelineIndex
+\RecordChanges
+\begin{document}
+  \DocInput{blocktable.dtx}
+  \PrintChanges
+  \PrintIndex
+\end{document}
+%</driver>
+% \fi
+%
+% \CheckSum{0}
+%
+% \CharacterTable
+%  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
+%   Lower-case    \a\b\c\d\e\f\g\h\i\j\k\l\m\n\o\p\q\r\s\t\u\v\w\x\y\z
+%   Digits        \0\1\2\3\4\5\6\7\8\9
+%   Exclamation   \!     Double quote  \"     Hash (number) \#
+%   Dollar        \$     Percent       \%     Ampersand     \&
+%   Acute accent  \'     Left paren    \(     Right paren   \)
+%   Asterisk      \*     Plus          \+     Comma         \,
+%   Minus         \-     Point         \.     Solidus       \/
+%   Colon         \:     Semicolon     \;     Less than     \<
+%   Equals        \=     Greater than  \>     Question mark \?
+%   Commercial at \@     Left bracket  \[     Backslash     \\
+%   Right bracket \]     Circumflex    \^     Underscore    \_
+%   Grave accent  \`     Left brace    \{     Vertical bar  \|
+%   Right brace   \}     Tilde         \~}
+%
+%
+% \changes{v0.1}{2015/08/08}{Experimantal version}
+%
+% \GetFileInfo{blocktable.dtx}
+%
+% \DoNotIndex{\newcommand,\newenvironment,\!,\@empty,\@gobble,\@gobbletwo}
+% \DoNotIndex{\@ifpackageloaded,\@ifpackagewith,\@ifundefined,\@namedef}
+% \DoNotIndex{\@nil,\@onlypreamble,\@tempa,\@tempb,\@tempswafalse,\def}
+% \DoNotIndex{\@tempswatrue,\^,\-,\active,\begingroup,\catcode,\@car,\@cdr}
+% \DoNotIndex{\edef,\else,\endgroup,\endinput,\expandafter,\fi,\if}
+% \DoNotIndex{\if@tempswa,\ifcase,\ifnum,\ifx,\lccode,\let,\lowercase}
+% \DoNotIndex{\MessageBreak,\next,\number,\numexpr,\or,\PackageError}
+% \DoNotIndex{\PackageWarning,\PackageWarningNoLine,\strip@prefix,\@@end}
+% \DoNotIndex{\relax,\space,\string,\DeclareOption,\ProcessOptions}
+% \DoNotIndex{\meaning,\ifdefined,\csname,\chardef,\endcsname,\protect}
+% \DoNotIndex{\input,\RequirePackage,\global,\ifcsname,\makeatother}
+% \DoNotIndex{\@makeother,\the,\toks@}
+%
+% \title{The \pkg{blocktable} package\thanks{This document
+%   corresponds to \pkg{blocktable}~\fileversion, dated \filedate.}}
+% \author{Ruben Giannotti\thanks{\email{ruben dot giannotti at gmx dot net}}}
+%
+% \maketitle
+%
+% \StopEventually{}
+%
+% \section{Implementation}
+%
+
+%conditionals
+%    \begin{macrocode}
+\newif\if@bt@spacesep
+\newif\if@bt@emptyline
+%    \end{macrocode}
+
+%options
+%    \begin{macrocode}
+\DeclareOption{spacesep}{\@bt@spaceseptrue}
+\DeclareOption{emptyline}{\@bt@emptylinertue}
+\ExecuteOptions{spacesep}
+
+\ProcessOptions\relax
+%    \end{macrocode}
+
+%counters
+%    \begin{macrocode}
+\newcounter{@bt@tabrow}
+\newcounter{@bt@emptyrow}
+\newcounter{@bt@modulus}
+\newcounter{@bt@default@blocksize}
+%    \end{macrocode}
+%lenghts
+%    \begin{macrocode}
+\newlength\bt@blocksep
+\newlength\bt@default@blocksep
+%    \end{macrocode}
+%setting default values and preallocating \bt@colseps
+%    \begin{macrocode}
+  \setcounter{@bt@default@blocksize}{5}
+  \setlength\bt@default@blocksep{12.555pt}
+\def\bt@colseps{}
+%    \end{macrocode}
+
+%storing \LT@tabularcr
+%    \begin{macrocode}
+\let\bt@LT@tabularcr=\LT@tabularcr
+%    \end{macrocode}
+
+%option handling
+%    \begin{macrocode}
+\if@bt@emptyline
+  \def\bt@empty@or@void@line{%
+    \ifnum\the@bt@tabrow=\the@bt@emptyrow
+      \addtocounter{@bt@emptyrow}{\the@bt@modulus}%
+      \bt@colseps\bt@LT@tabularcr
+    \fi}
+  \def\LT@tabularcr{\bt@LT@tabularcr\bt@empty@or@void@line}
+\else
+  \def\bt@empty@or@void@line{%
+    \ifnum\the@bt@tabrow=\the@bt@emptyrow
+      \addtocounter{@bt@emptyrow}{\the@bt@modulus}%
+      \setlength\bt@blocksep{\the\bt@default@blocksep}%
+    \fi}
+  \def\LT@tabularcr{\bt@empty@or@void@line\bt@LT@tabularcr[\the\bt@blocksep]}
+\fi
+%    \end{macrocode}
+%core environment
+%    \begin{macrocode}
+\newenvironment{blocktable}[2][\the@bt@default@blocksize]
+  {\bt@setblocksize{#1}\bt@build@colseps\longtable{@{\stepcounter{@bt@tabrow}}#2}}
+  {\endlongtable\gdef\bt@colseps{}}
+%    \end{macrocode}
+%helper macros
+%\bt@build@colseps is not needed with the spacesep option
+%    \begin{macrocode}
+\if@bt@emptyline
+%    \end{macrocode}
+%    \begin{macrocode}
+  \newcommand\bt@build@colseps{%
+    \@tempcnta\@ne
+    \loop
+      \advance\@tempcnta by 1
+      \g@addto@macro\bt@colseps{&}
+    \ifnum\@tempcnta<\the\LT@cols\repeat
+  }
+%    \end{macrocode}
+%    \begin{macrocode}
+\else
+  \let\bt@build@colseps=\relax
+\fi
+%    \end{macrocode}
+%blocksize processing
+%    \begin{macrocode}
+\newcommand{\bt@setblocksize}[1]{%
+  \setcounter{@bt@modulus}{#1}
+  \setcounter{@bt@emptyrow}{\the@bt@modulus}
+  \if@bt@emptyline \stepcounter{@bt@modulus} \fi
+}
+%    \end{macrocode}
+%user interface
+%    \begin{macrocode}
+\newcommand{\defaultBTblocksize}[1]{\setcounter{@bt@default@blocksize}{#1}}
+\newcommand{\defaultBTblocksep}[1]{%
+  \if@bt@emptyline
+    \PackageWarning{blocktble}
+     {\noexpand\defaultBTblocksep has no effect with the emptyline option}\fi
+  \setlength\bt@default@blocksep{#1}
+}
+%    \end{macrocode}
+%final patches to ensure the right behaviour of blocktable
+%(start the chunking [do not confuse this with LT's chunking, here optical chunking is meant]
+%of the blocks from the right point)
+%    \end{macrocode}
+\g@addto@macro\endfirsthead{\setcounter{@bt@tabrow}{1}}
+\g@addto@macro\endhead{\setcounter{@bt@tabrow}{1}}
+\g@addto@macro\endfoot{\setcounter{@bt@tabrow}{1}}
+\g@addto@macro\endlastfoot{\setcounter{@bt@tabrow}{1}}
+%    \end{macrocode}
+%\Finale
+
+\endinput
