@@ -166,7 +166,7 @@
 %    \begin{macrocode}
 \newenvironment{blocktable}[2][\the@bt@default@blocksize]
   {\bt@setblocksize{#1}\bt@build@colseps\longtable{@{\stepcounter{@bt@tabrow}}#2}}
-  {\endlongtable \gdef\bt@colseps{} \setcounter{@tabrow}{0}}
+  {\endlongtable \gdef\bt@colseps{} \setcounter{@bt@tabrow}{0}}
 %    \end{macrocode}
 %helper macros
 %\bt@build@colseps is not needed with the spacesep option
