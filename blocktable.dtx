@@ -99,6 +99,11 @@
 % \section{Implementation}
 %
 
+%load required packages
+%    \begin{macrocode}
+\RequirePackage{longtable}
+\RequirePackage{array}
+%    \end{macrocode}
 %conditionals
 %    \begin{macrocode}
 \newif\if@bt@spacesep
@@ -108,7 +113,7 @@
 %options
 %    \begin{macrocode}
 \DeclareOption{spacesep}{\@bt@spaceseptrue}
-\DeclareOption{emptyline}{\@bt@emptylinertue}
+\DeclareOption{emptyline}{\@bt@emptylinetrue}
 \ExecuteOptions{spacesep}
 
 \ProcessOptions\relax
